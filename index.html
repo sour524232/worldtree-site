@@ -62,14 +62,19 @@ const PI=Math.PI, TAU=PI*2, rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.ra
 const gltfLoader=new GLTFLoader();
 // 구역별 AI 3D 모델(있으면 프로시저럴 대신 로드). 부채꼴 슬롯에 맞춰 배치.
 // vizcom 등으로 만든 GLB를 assets/<id>.glb 로 넣고 여기 등록하면 해당 구역에 얹힘.
-const ZONE_GLB={};
-function placeGLBWedge(zg,url,r0,r1,cA,mR){
+const ZONE_GLB={machine:'assets/machine.glb'};
+window.__machineTF={s:60, ry:90, r:106, oy:65};   // s=스케일, ry=추가Y회전(도), r=반경, oy=높이(천계 위로)
+function placeGLBWedge(zg,url,cA,cfg){   // cfg={tf,obj,apply} = window 키 이름
   gltfLoader.load(url,g=>{const o=g.scene;
     o.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)n.material.side=THREE.DoubleSide;}});
-    const box=new THREE.Box3().setFromObject(o),sz=new THREE.Vector3(),ctr=new THREE.Vector3();box.getSize(sz);box.getCenter(ctr);
-    const s=((r1-r0)*1.25)/Math.max(sz.x,sz.z); o.scale.setScalar(s);
-    o.position.set(-ctr.x*s, -box.min.y*s - sz.y*s*0.35, -ctr.z*s);  // 밑동 일부를 아래로 묻어 부유섬 느낌
-    const holder=new THREE.Group(); holder.position.set(Math.cos(cA)*mR,0,Math.sin(cA)*mR); holder.rotation.y=-cA+PI; holder.add(o); zg.add(holder);
+    const box=new THREE.Box3().setFromObject(o),ctr=new THREE.Vector3();box.getCenter(ctr);
+    o.position.sub(ctr);                 // 바운딩박스 중심을 원점으로
+    const holder=new THREE.Group(); holder.add(o); zg.add(holder);
+    window[cfg.obj]=holder;
+    window[cfg.apply]=()=>{const t=window[cfg.tf];holder.scale.setScalar(t.s);
+      holder.rotation.y=-cA+PI+(t.ry||0)*PI/180;
+      holder.position.set(Math.cos(cA)*t.r, t.oy||0, Math.sin(cA)*t.r);};
+    window[cfg.apply]();
   },undefined,e=>console.warn('glb',url,e));
 }
 // 중심부(원)용: 이전에 생성한 벚꽃 세계수 섬 GLB를 중앙에 배치
@@ -295,7 +300,7 @@ guard.forEach((id,i)=>{const cfg=GC[id];const a0=gA0(i)+GI,a1=gA0(i)+TAU/6-GI,cA
   const surf={ice:0xeaf3fb,machine:0x2e333a,sun:0xd9c79a,fire:0x2a1c1c,nature:0x5fa64e,water:0x2e4a63}[id];
   const rockC={ice:0x8aa8c8,machine:0x2a2e34,sun:0xb59a68,fire:0x1e1412,nature:0x6b5636,water:0x4a6274}[id];
   const z=makeZone(guardG,META[id],cfg.h);
-  if(ZONE_GLB[id]){ placeGLBWedge(z,ZONE_GLB[id],cfg.r0,cfg.r1,cA,mR); zoneLabel(z,META[id].tag.replace('수호자 · ',''),META[id].color,mR,cA,cfg.r1<128?24:26); return; }
+  if(ZONE_GLB[id]){ placeGLBWedge(z,ZONE_GLB[id],cA,{tf:'__'+id+'TF',obj:'__'+id,apply:'__apply_'+id}); zoneLabel(z,META[id].tag.replace('수호자 · ',''),META[id].color,mR,cA,cfg.r1<128?24:26); return; }
   floatWedge(z,cfg.r0,cfg.r1,a0,a1,surf,rockC);
   // 히어로 구조물은 중앙에서 살짝 벗어나게
   const hA=cA+rnd(-.14,.14), hR=mR+rnd(-8,8), hx=Math.cos(hA)*hR, hz=Math.sin(hA)*hR;
