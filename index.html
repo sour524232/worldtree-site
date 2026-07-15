@@ -62,8 +62,10 @@ const PI=Math.PI, TAU=PI*2, rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.ra
 const gltfLoader=new GLTFLoader();
 // 구역별 AI 3D 모델(있으면 프로시저럴 대신 로드). 부채꼴 슬롯에 맞춰 배치.
 // vizcom 등으로 만든 GLB를 assets/<id>.glb 로 넣고 여기 등록하면 해당 구역에 얹힘.
-const ZONE_GLB={machine:'assets/machine.glb'};
+const ZONE_GLB={machine:'assets/machine.glb', sun:'assets/sun.glb', nature:'assets/nature.glb'};
 window.__machineTF={s:60, ry:55, r:106, oy:65};   // s=스케일, ry=추가Y회전(도), r=반경, oy=높이(천계 위로)
+window.__sunTF={s:44, ry:50, r:106, oy:6};
+window.__natureTF={s:50, ry:0, r:106, oy:6};
 function placeGLBWedge(zg,url,cA,cfg){   // cfg={tf,obj,apply} = window 키 이름
   gltfLoader.load(url,g=>{const o=g.scene;
     o.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)n.material.side=THREE.DoubleSide;}});
