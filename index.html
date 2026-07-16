@@ -63,11 +63,13 @@ const gltfLoader=new GLTFLoader();
 const SOLO=new URLSearchParams(location.search).get('solo');   // ?solo=<id> : 해당 GLB만 로드(검사용)
 // 구역별 AI 3D 모델(있으면 프로시저럴 대신 로드). 부채꼴 슬롯에 맞춰 배치.
 // vizcom 등으로 만든 GLB를 assets/<id>.glb 로 넣고 여기 등록하면 해당 구역에 얹힘.
-const ZONE_GLB={machine:'assets/machine.glb', sun:'assets/sun.glb', nature:'assets/nature.glb', fire:'assets/fire.glb'};
-window.__machineTF={s:60, ry:55, r:106, oy:65};   // s=스케일, ry=추가Y회전(도), r=반경, oy=높이(천계 위로)
-window.__sunTF={s:44, ry:50, r:106, oy:6};
-window.__natureTF={s:50, ry:15, r:106, oy:6};
-window.__fireTF={s:18, ry:45, r:106, oy:4};
+const ZONE_GLB={machine:'assets/machine.glb', sun:'assets/sun.glb', nature:'assets/nature.glb', fire:'assets/fire.glb', ice:'assets/ice.glb'};
+// 수호자 구역들: 기계와 동일 높이(총 y≈58)로 상승. 각 zone cfg.h 를 감안해 oy 지정.
+window.__machineTF={s:60, ry:55, r:106, oy:65};   // zone -7 → 총 58
+window.__sunTF={s:48, ry:50, r:106, oy:49};        // zone 9 → 총 58 (+10%)
+window.__natureTF={s:55, ry:15, r:106, oy:51};     // zone 7 → 총 58 (+10%)
+window.__fireTF={s:21.6, ry:45, r:106, oy:62};     // zone -4 → 총 58 (+20%)
+window.__iceTF={s:40, ry:45, r:108, oy:53};         // zone 5 → 총 58
 function placeGLBWedge(zg,url,cA,cfg){   // cfg={tf,obj,apply} = window 키 이름
   gltfLoader.load(url,g=>{const o=g.scene;
     o.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)n.material.side=THREE.DoubleSide;}});
