@@ -60,12 +60,14 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const PI=Math.PI, TAU=PI*2, rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[(Math.random()*a.length)|0];
 const gltfLoader=new GLTFLoader();
+const SOLO=new URLSearchParams(location.search).get('solo');   // ?solo=<id> : 해당 GLB만 로드(검사용)
 // 구역별 AI 3D 모델(있으면 프로시저럴 대신 로드). 부채꼴 슬롯에 맞춰 배치.
 // vizcom 등으로 만든 GLB를 assets/<id>.glb 로 넣고 여기 등록하면 해당 구역에 얹힘.
-const ZONE_GLB={machine:'assets/machine.glb', sun:'assets/sun.glb', nature:'assets/nature.glb'};
+const ZONE_GLB={machine:'assets/machine.glb', sun:'assets/sun.glb', nature:'assets/nature.glb', fire:'assets/fire.glb'};
 window.__machineTF={s:60, ry:55, r:106, oy:65};   // s=스케일, ry=추가Y회전(도), r=반경, oy=높이(천계 위로)
 window.__sunTF={s:44, ry:50, r:106, oy:6};
-window.__natureTF={s:50, ry:0, r:106, oy:6};
+window.__natureTF={s:50, ry:15, r:106, oy:6};
+window.__fireTF={s:18, ry:45, r:106, oy:4};
 function placeGLBWedge(zg,url,cA,cfg){   // cfg={tf,obj,apply} = window 키 이름
   gltfLoader.load(url,g=>{const o=g.scene;
     o.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)n.material.side=THREE.DoubleSide;}});
@@ -274,7 +276,7 @@ const META={
 /* ── 중심부(원 · 거의 고정) ── */
 {
   const z=makeZone(coreG,META.core,0);
-  placeGLBCore(z,'assets/core.glb',54,24);   // 이전 생성 벚꽃 세계수 섬 3D 재사용(재생성 없음). sink 크게=아래로 내림
+  if(!SOLO)placeGLBCore(z,'assets/core.glb',54,24);   // 이전 생성 벚꽃 세계수 섬 3D 재사용(재생성 없음). sink 크게=아래로 내림
   points(z,70,1.0,0xf7c2cc,3,26,0,TAU,()=>rnd(2,26),THREE.NormalBlending);
   const petals=z.children[z.children.length-1];
   updaters.push(()=>{const p=petals.geometry.attributes.position;for(let i=0;i<p.count;i++){let y=p.getY(i)-.03;if(y<1)y=26;p.setY(i,y);}p.needsUpdate=true;});
@@ -285,12 +287,12 @@ const META={
 const IN0=33,IN1=75,G=0.11;
 { // 천계 (오른쪽) — vizcom 3D 적용 (마계 정반대·동일 크기)
   const z=makeZone(innerG,META.heaven,7);
-  placeGLBHalf(z,'assets/heaven.glb',{tf:'__heavenTF',obj:'__heaven',apply:'__applyHeaven'});
+  if(!SOLO)placeGLBHalf(z,'assets/heaven.glb',{tf:'__heavenTF',obj:'__heaven',apply:'__applyHeaven'});
   zoneLabel(z,'천계',META.heaven.color,(IN0+IN1)/2,0,26);
 }
 { // 마계 (왼쪽) — vizcom 3D 적용
   const z=makeZone(innerG,META.hell,7);   // 천계와 동일 높이
-  placeGLBHalf(z,'assets/hell.glb',{tf:'__hellTF',obj:'__hell',apply:'__applyHell'});
+  if(!SOLO)placeGLBHalf(z,'assets/hell.glb',{tf:'__hellTF',obj:'__hell',apply:'__applyHell'});
   zoneLabel(z,'마계',META.hell.color,(IN0+IN1)/2,PI,26);
 }
 
@@ -302,7 +304,7 @@ guard.forEach((id,i)=>{const cfg=GC[id];const a0=gA0(i)+GI,a1=gA0(i)+TAU/6-GI,cA
   const surf={ice:0xeaf3fb,machine:0x2e333a,sun:0xd9c79a,fire:0x2a1c1c,nature:0x5fa64e,water:0x2e4a63}[id];
   const rockC={ice:0x8aa8c8,machine:0x2a2e34,sun:0xb59a68,fire:0x1e1412,nature:0x6b5636,water:0x4a6274}[id];
   const z=makeZone(guardG,META[id],cfg.h);
-  if(ZONE_GLB[id]){ placeGLBWedge(z,ZONE_GLB[id],cA,{tf:'__'+id+'TF',obj:'__'+id,apply:'__apply_'+id}); zoneLabel(z,META[id].tag.replace('수호자 · ',''),META[id].color,mR,cA,cfg.r1<128?24:26); return; }
+  if(ZONE_GLB[id] && (!SOLO||SOLO===id)){ placeGLBWedge(z,ZONE_GLB[id],cA,{tf:'__'+id+'TF',obj:'__'+id,apply:'__apply_'+id}); zoneLabel(z,META[id].tag.replace('수호자 · ',''),META[id].color,mR,cA,cfg.r1<128?24:26); return; }
   floatWedge(z,cfg.r0,cfg.r1,a0,a1,surf,rockC);
   // 히어로 구조물은 중앙에서 살짝 벗어나게
   const hA=cA+rnd(-.14,.14), hR=mR+rnd(-8,8), hx=Math.cos(hA)*hR, hz=Math.sin(hA)*hR;
